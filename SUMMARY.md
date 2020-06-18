@@ -1,4 +1,4 @@
 # Table of contents
 
-* [Initial page](README.md)
+* [Egregore: A Personal Software System](README.md)
 
