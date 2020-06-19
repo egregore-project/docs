@@ -15,15 +15,15 @@ The system is agnostic to implementation technology provided they fulfill the gu
 
 ## Identity
 
-All identities for the purposes of the system are based on Public-key cryptography, which is conformable to a super-set for practically all identity systems in use today. This decision simplifies the operation of the system in offline scenarios and lends well to implementations that partition data across users.
+All identities for the purposes of the system are based on [Public-key cryptography](https://en.wikipedia.org/wiki/Public-key_cryptography), which is conformable to a super-set for practically all identity systems in use today. This decision simplifies the operation of the system in offline scenarios and lends well to implementations that partition data across users.
 
 The primary drawback of Public-key cryptography for identities is that because verification of signatures is performed by anyone, it is not possible to delete verification of a signature against a public key once it is obtained by another source. The system is capable of fulfilling user deletion requests, including removing public key records and signatures, but it cannot invalidate signatures already obtained.
 
-Public-key cryptography operations used by the system are based on Daniel Bernstein's algorithms implemented in NaCL, and utilized by libraries like libsodium, due to their ease of use for developers and software community opinion of these implementations.
+Public-key cryptography operations used by the system are based on Daniel Bernstein's algorithms implemented in [NaCL](https://nacl.cr.yp.to/), and utilized by libraries like [libsodium](https://libsodium.org), due to their ease of use for developers and software community opinion of these implementations.
 
 ### User
 
-A user is identified in the system by the public key of an Ed25519 key pair, or a key derived from a base high entropy key. All user-based operations are signed. One user is created on system initialization to act as the primary administrator, and may grant this status to other users or groups of users by appending the log with signed commands. 
+A user is identified in the system by the public key of an [Ed25519 ](https://en.wikipedia.org/wiki/EdDSA#Ed25519)key pair, or a key derived from a base high entropy key. All user-based operations are signed. One user is created on system initialization to act as the primary administrator, and may grant this status to other users or groups of users by appending the log with signed commands. 
 
 ### Roles
 
@@ -40,7 +40,7 @@ All schema logs typically begin with a namespace declaration.
 | NAMESPACE MyApp | - |
 
 {% hint style="info" %}
-Namespaces are case insensitive. If no explicit namespace is provided before schemas are defined, the NAMESPACE is implied as "default"
+Namespaces are case insensitive. If no explicit namespace is provided before schemas are defined, the NAMESPACE is implied as "default".
 {% endhint %}
 
 The schema is stored in an ordered append-only log format.
@@ -158,11 +158,11 @@ A log entry may contain multiple log objects, which are data objects that repres
     </tr>
     <tr>
       <td style="text-align:left">Index</td>
-      <td style="text-align:left">The insert order of log entries.</td>
+      <td style="text-align:left">The insert order of log entries. It is not included in serialization.</td>
     </tr>
     <tr>
       <td style="text-align:left">Nonce</td>
-      <td style="text-align:left">A cryptographic random buffer unique to each log entry.</td>
+      <td style="text-align:left">A 512-bit cryptographic random buffer unique to each log entry.</td>
     </tr>
     <tr>
       <td style="text-align:left">Objects</td>
