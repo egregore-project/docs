@@ -43,7 +43,7 @@ All schema logs typically begin with a namespace declaration.
 Namespaces are case insensitive. If no explicit namespace is provided before schemas are defined, the NAMESPACE is implied as "default"
 {% endhint %}
 
-The schema is stored in an ordered append-only log format. Each entry in the schema is considered an internal revision by its index in the log. 
+The schema is stored in an ordered append-only log format.
 
 The following example shows the creation of a simple application that manages customer orders.
 
@@ -64,7 +64,7 @@ As data structures change over time, modifying existing schemas means appending 
 
 #### Value Hashing
 
-For each logical change to a specific schema in the log, we can produce the "value hash" of the schema using a 128-bit non-cryptographic hashing function, such as Murmur Hash 3. The value hash is produced by concatenating all non-computed user-provided values, and omitting all system-derived values.
+For each logical change to a specific schema in the log, we can produce the "value hash" of the schema using a 128-bit non-cryptographic hashing function \(MurmurHash3\). The value hash is produced by concatenating all non-computed user-provided values, and omitting all system-derived values.
 
 | Log Entry | Revision | &lt;Value Hash&gt; |
 | :--- | :--- | :--- |
@@ -117,4 +117,70 @@ All external data record operations are traceable to a target version, or the de
 #### Revision Sets
 
 For the purposes of relationships between data structures, a revision set is the group of all schema as they existed at a particular revision. This means that a relationship between one schema is always defined as the relationship between schema versions prior to the relating schema. The value hash is used to identity schema in a given revision set, and schema versions appear in every subsequent revision set in which the schema is not the subject of change.
+
+
+
+## Log Format
+
+All log entries are stored in a cryptographically secure, ordered, append-only log format.
+
+A log entry may contain multiple log objects, which are data objects that represent commands appended to the log. All log entries are signed, and their public keys and signatures are stored for verification. It is up to the log consumer to determine if any log entries are invalid. Value hashes and revisions are not stored, as they are derived, but may be materialized in caches.
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align:left">Name</th>
+      <th style="text-align:left">Format</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align:left">Version</td>
+      <td style="text-align:left">An integer describing the version of the storage format.</td>
+    </tr>
+    <tr>
+      <td style="text-align:left">PreviousHash</td>
+      <td style="text-align:left">The hash of the previous entry in the log, as a checksum. The hash algorithm
+        used is SHA-256.</td>
+    </tr>
+    <tr>
+      <td style="text-align:left">HashRoot</td>
+      <td style="text-align:left">The hash root of all log entry objects, as a checksum. The hash algorithm
+        used is a double SHA-256 of the Merkle tree of all objects in the log entry.</td>
+    </tr>
+    <tr>
+      <td style="text-align:left">Timestamp</td>
+      <td style="text-align:left">
+        <p>The logical timestamp of when the entry was appended to the log.</p>
+        <p>Log timestamps are stored in a Unix epoch time format. 128 bits are used
+          to avoid the <a href="https://en.wikipedia.org/wiki/Year_2038_problem">2038 problem</a>.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align:left">Index</td>
+      <td style="text-align:left">The insert order of log entries.</td>
+    </tr>
+    <tr>
+      <td style="text-align:left">Nonce</td>
+      <td style="text-align:left">A cryptographic random buffer unique to each log entry.</td>
+    </tr>
+    <tr>
+      <td style="text-align:left">Objects</td>
+      <td style="text-align:left">A variable list of log entry objects used to materialize an ontology.</td>
+    </tr>
+  </tbody>
+</table>
+
+Each log entry object is a well-known system level command, in the case of schema, or a representation of data instanced from a schema.
+
+| Name | Format |
+| :--- | :--- |
+| Index | The order to arrange the objects in the buffer for the purpose of validating the hash. |
+| Type | The data type of the buffer. |
+| Version | The version format version of the instance of this log object. |
+| Data | The serialized buffer of the data representing the log object. |
+| Timestamp | The logical timestamp of when the object was appended to the log entry's object collection. Log timestamps are stored in a Unix epoch time format. 128 bits are used to avoid the [2038 problem](https://en.wikipedia.org/wiki/Year_2038_problem). _Timestamps may appear in the future to facilitate scheduled commands._ |
+| Hash | The hash of the log entry object, as a checksum. The hash algorithm used is SHA-256. |
+
+
 
